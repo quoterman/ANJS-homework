@@ -22,13 +22,33 @@ const addVideo = (user: Admin, item: Item, video: string): Response => {
     }
 }
 
-// Не совсем понимаю смысл этой функции типа продать от имени админа или клиенты могут друг у друга покупать?
 const sell = (buyer: Client, seller: Client, item: Item): Response => {
-    // buyer.collection -= item.id
-    return {code: 401, result: 'client must not sell'}
+    if (buyer.balance < item.price) {
+        return {code: 400, result: `buyer ${buyer.id} dont have many on balance`}
+    }
+    if (seller.collection.includes(item.id)) {
+        return {code: 400, result: `seller ${seller.id} dont have item ${item.id}`}
+    }
+
+    buyer.balance -= item.price
+    seller.balance += item.price
+
+    seller.collection = seller.collection.filter((f) => {
+        return f !== item.id
+    })
+    buyer.collection.push(item.id)
+    return {code: 200, result: `seller ${buyer.id} sold item ${item.id} to buyer ${buyer.id} `}
 }
 
 type Response = {
     code: number
     result: string
 }
+
+/*
+Questions
+
+1. Нормально ли изменять входные параметры в функциях бизнес логики или обязательно нужно создавать локальные переменные и работать только с ними?
+2. Что должны возвращать такие функции? Лучше типизировать прям сами входные параметры или стоит разбивать и такие функции на арность 1?
+
+*/
